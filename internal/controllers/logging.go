@@ -4,7 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
+	//"time"	
+	"crypto/aes"
+	"crypto/cipher"
+	"encoding/base64"
+	//"errors"
+	"log"
+	"bytes"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jz222/logowl/internal/models"
@@ -17,32 +23,77 @@ type LoggingControllers struct {
 	LoggingService services.InterfaceLogging
 }
 
+func decrypt(key []byte, securemess string) (decodedmess string, err error) {
+	encKey := "NFd6N3v1nbL47FK0xpZjxZ7NY4fYpNYd"
+	iv := "TestingIV1234567"
+	ciphertext, err := base64.StdEncoding.DecodeString(securemess)
+	if err != nil {
+		panic(err)
+	}
+
+	block, err := aes.NewCipher([]byte(encKey))
+	if err != nil {
+		panic(err)
+	}
+
+	if len(ciphertext)%aes.BlockSize != 0 {
+		panic("ciphertext is not a multiple of the block size")
+	}
+
+	mode := cipher.NewCBCDecrypter(block, []byte(iv))
+	mode.CryptBlocks(ciphertext, ciphertext)
+
+	decodedmess = string(ciphertext)
+	return
+}
+
 func (l *LoggingControllers) RegisterError(c *gin.Context) {
+	/*
 	errorEvent := models.Error{
 		Badges:    map[string]string{},
 		UserAgent: c.Request.UserAgent(),
 		Count:     1,
 		Timestamp: time.Now().Unix(),
 	}
+	*/
 
-	err := json.NewDecoder(c.Request.Body).Decode(&errorEvent)
-	if err != nil {
-		utils.RespondWithError(c, http.StatusBadRequest, err.Error())
-		return
+	CIPHER_KEY := []byte("00000000000000000000000000000000")
+
+	buf := new(bytes.Buffer)
+    buf.ReadFrom(c.Request.Body)
+    newStr := buf.String()
+
+	log.Printf("ENCRYPTED: %s\n", newStr)
+
+	if decrypted, err := decrypt(CIPHER_KEY, newStr); err != nil {
+		log.Println(">>>>>>>>>", err)
+	} else {
+		log.Printf("+++++++++++ DECRYPTED: %s\n", decrypted)
+
+		/*
+		err := json.NewDecoder(decrypted).Decode(&errorEvent)
+		if err != nil {
+			utils.RespondWithError(c, http.StatusBadRequest, err.Error())
+			return
+		}
+	
+		if !errorEvent.AnonymizeData {
+			errorEvent.ClientIP = c.ClientIP()
+		}
+	
+		if !errorEvent.IsValid() {
+			utils.RespondWithError(c, http.StatusBadRequest, "the provided data is too large")
+			return
+		}
+	
+		go l.LoggingService.SaveError(errorEvent)
+	
+		utils.RespondWithSuccess(c)
+		*/
+
 	}
 
-	if !errorEvent.AnonymizeData {
-		errorEvent.ClientIP = c.ClientIP()
-	}
 
-	if !errorEvent.IsValid() {
-		utils.RespondWithError(c, http.StatusBadRequest, "the provided data is too large")
-		return
-	}
-
-	go l.LoggingService.SaveError(errorEvent)
-
-	utils.RespondWithSuccess(c)
 }
 
 func (l *LoggingControllers) RegisterAnalyticEvent(c *gin.Context) {

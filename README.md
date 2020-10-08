@@ -1,5 +1,7 @@
 ![log owl hero](./assets/header-logo.png?raw=true)
 
+go get -d -u ./...
+
 <div align="center">
   <p>
     <h3>Log Owl - Community Edition</h3>
