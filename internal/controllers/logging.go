@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	//"time"	
+	"time"	
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/base64"
 	//"errors"
 	"log"
 	"bytes"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jz222/logowl/internal/models"
@@ -24,14 +25,13 @@ type LoggingControllers struct {
 }
 
 func decrypt(key []byte, securemess string) (decodedmess string, err error) {
-	encKey := "NFd6N3v1nbL47FK0xpZjxZ7NY4fYpNYd"
 	iv := "TestingIV1234567"
 	ciphertext, err := base64.StdEncoding.DecodeString(securemess)
 	if err != nil {
 		panic(err)
 	}
 
-	block, err := aes.NewCipher([]byte(encKey))
+	block, err := aes.NewCipher(key)
 	if err != nil {
 		panic(err)
 	}
@@ -48,16 +48,16 @@ func decrypt(key []byte, securemess string) (decodedmess string, err error) {
 }
 
 func (l *LoggingControllers) RegisterError(c *gin.Context) {
-	/*
+	
 	errorEvent := models.Error{
 		Badges:    map[string]string{},
 		UserAgent: c.Request.UserAgent(),
 		Count:     1,
 		Timestamp: time.Now().Unix(),
 	}
-	*/
+	
 
-	CIPHER_KEY := []byte("00000000000000000000000000000000")
+	CIPHER_KEY := []byte("NFd6N3v1nbL47FK0xpZjxZ7NY4fYpNYd")
 
 	buf := new(bytes.Buffer)
     buf.ReadFrom(c.Request.Body)
@@ -70,8 +70,8 @@ func (l *LoggingControllers) RegisterError(c *gin.Context) {
 	} else {
 		log.Printf("+++++++++++ DECRYPTED: %s\n", decrypted)
 
-		/*
-		err := json.NewDecoder(decrypted).Decode(&errorEvent)
+		
+		err := json.NewDecoder(strings.NewReader(decrypted)).Decode(&errorEvent)
 		if err != nil {
 			utils.RespondWithError(c, http.StatusBadRequest, err.Error())
 			return
@@ -89,7 +89,7 @@ func (l *LoggingControllers) RegisterError(c *gin.Context) {
 		go l.LoggingService.SaveError(errorEvent)
 	
 		utils.RespondWithSuccess(c)
-		*/
+		
 
 	}
 
