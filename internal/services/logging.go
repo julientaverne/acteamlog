@@ -12,8 +12,10 @@ import (
 	"github.com/jz222/logowl/internal/models"
 	"github.com/jz222/logowl/internal/store"
 	"github.com/jz222/logowl/internal/utils"
+	"github.com/jz222/logowl/internal/keys"
 	"github.com/mssola/user_agent"
 	"go.mongodb.org/mongo-driver/bson"
+	"gopkg.in/gomail.v2"
 )
 
 // InterfaceLogging represents the interface
@@ -132,7 +134,31 @@ func (l *Logging) SaveError(errorEvent models.Error) {
 	}
 
 	if service.WebhookURL != "" {
-		l.Request.Post(updatedErrorEvent, service.WebhookURL)
+		//l.Request.Post(updatedErrorEvent, service.WebhookURL)
+		
+		// Load Smtp settings
+		smtpServer := keys.GetKeys().SMTP_SERVER
+		smtpPort := keys.GetKeys().SMTP_PORT
+		smtpUser := keys.GetKeys().SMTP_USER
+		smtpPassword := keys.GetKeys().SMTP_PASSWORD
+		subject := "New Error for organization: "+organization.Name+" , on service: "+service.Name
+
+		m := gomail.NewMessage()
+		m.SetHeader("From", "acteamlog@gmail.com")
+		m.SetHeader("To", service.WebhookURL)
+		//m.SetAddressHeader("Cc", "dan@example.com", "Dan")
+		m.SetHeader("Subject", subject)
+		m.SetBody("text/html", "<b>Message: </b>"+errorEvent.Message+"<br/><br/>" + "<b>Stacktrace :</b>"+errorEvent.Stacktrace +"<br/><br/>" )
+		//m.Attach("/home/Alex/lolcat.jpg")
+	
+		d := gomail.NewDialer(smtpServer, smtpPort, smtpUser, smtpPassword)
+		
+		
+	
+		// Send the email to Bob, Cora and Dan.
+		if err := d.DialAndSend(m); err != nil {
+			return
+		}
 	}
 }
 
