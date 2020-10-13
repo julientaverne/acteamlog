@@ -73,6 +73,10 @@ var envVariables = models.Keys{
 	CLIENT_URL:            loadEnvAsString("CLIENT_URL"),
 	MONTHLY_REQUEST_LIMIT: loadEnvAsInt("MONTHLY_REQUEST_LIMIT"),
 	IS_SELFHOSTED:         loadEnvAsString("IS_SELFHOSTED") == "true",
+	SMTP_SERVER:           loadEnvAsString("SMTP_SERVER"),
+	SMTP_PORT:             loadEnvAsInt("SMTP_PORT"),
+	SMTP_USER:             loadEnvAsString("SMTP_USER"),
+	SMTP_PASSWORD:         loadEnvAsString("SMTP_PASSWORD")	,
 }
 
 // GetKeys returns all environment variables. It can also be

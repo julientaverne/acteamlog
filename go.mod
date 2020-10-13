@@ -25,6 +25,8 @@ require (
 	golang.org/x/sync v0.0.0-20200930132711-30421366ff76 // indirect
 	golang.org/x/sys v0.0.0-20201008064518-c1f3e3309c71 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
+	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
+	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )

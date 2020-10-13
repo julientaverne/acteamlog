@@ -2,7 +2,7 @@ package services
 
 import (
 	"bytes"
-	"context"
+	//"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,10 +12,12 @@ import (
 	"strings"
 	"time"
 
+
 	"github.com/jz222/logowl/internal/keys"
 	"github.com/jz222/logowl/internal/models"
 	"github.com/jz222/logowl/internal/templates"
-	"github.com/mailgun/mailgun-go/v4"
+	//"github.com/mailgun/mailgun-go/v4"
+	"gopkg.in/gomail.v2"
 )
 
 // InterfaceRequest represents the interface for the request service.
@@ -127,6 +129,12 @@ func (r *Request) SendEmail(recipient, event string, data map[string]interface{}
 		return nil
 	}
 
+	// Load Smtp settings
+	smtpServer := keys.GetKeys().SMTP_SERVER
+	smtpPort := keys.GetKeys().SMTP_PORT
+	smtpUser := keys.GetKeys().SMTP_USER
+	smtpPassword := keys.GetKeys().SMTP_PASSWORD
+
 	// Determine email template
 	switch event {
 	case "invitation":
@@ -151,7 +159,7 @@ func (r *Request) SendEmail(recipient, event string, data map[string]interface{}
 		return err
 	}
 
-	parsedBody := builder.String()
+	//parsedBody := builder.String()
 
 	// Parse email template
 	t = template.Must(template.New("email").Parse(emailTemplate))
@@ -165,6 +173,7 @@ func (r *Request) SendEmail(recipient, event string, data map[string]interface{}
 
 	parsedHTML := builder.String()
 
+	/*
 	// Setup Mailgun and send message
 	mg := mailgun.NewMailgun(mailgunDomain, mailgunPrivateKey)
 
@@ -176,14 +185,37 @@ func (r *Request) SendEmail(recipient, event string, data map[string]interface{}
 	message := mg.NewMessage("Log Owl <no-reply@logowl.io>", subject, parsedBody, recipient)
 
 	message.SetHtml(parsedHTML)
+	*/
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-	defer cancel()
+	/* START CUSTOM SEND MAIL*/
+	m := gomail.NewMessage()
+	m.SetHeader("From", "alex@example.com")
+	m.SetHeader("To", recipient)
+	//m.SetAddressHeader("Cc", "dan@example.com", "Dan")
+	m.SetHeader("Subject", subject)
+	m.SetBody("text/html", parsedHTML)
+	//m.Attach("/home/Alex/lolcat.jpg")
 
+	d := gomail.NewDialer(smtpServer, smtpPort, smtpUser, smtpPassword)
+	
+	
+
+	// Send the email to Bob, Cora and Dan.
+	if err := d.DialAndSend(m); err != nil {
+		return err
+	}
+	/* END CUSTOM SEND MAIL*/
+
+	//ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	//defer cancel()
+	/*
 	_, _, err = mg.Send(ctx, message)
 	if err != nil {
 		return err
 	}
+	*/
+
+	
 
 	return nil
 }

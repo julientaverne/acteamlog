@@ -66,7 +66,7 @@ func (l *LoggingControllers) RegisterError(c *gin.Context) {
 	log.Printf("ENCRYPTED: %s\n", newStr)
 
 	if decrypted, err := decrypt(CIPHER_KEY, newStr); err != nil {
-		log.Println(">>>>>>>>>", err)
+		log.Println(">>>>>>>>>", err, newStr)
 	} else {
 		log.Printf("+++++++++++ DECRYPTED: %s\n", decrypted)
 
