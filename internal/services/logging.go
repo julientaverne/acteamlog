@@ -8,14 +8,17 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"net/http"
+	"bytes"
+	"encoding/json"
 
 	"github.com/jz222/logowl/internal/models"
 	"github.com/jz222/logowl/internal/store"
 	"github.com/jz222/logowl/internal/utils"
-	"github.com/jz222/logowl/internal/keys"
+	//"github.com/jz222/logowl/internal/keys"
 	"github.com/mssola/user_agent"
 	"go.mongodb.org/mongo-driver/bson"
-	"gopkg.in/gomail.v2"
+	//"gopkg.in/gomail.v2"
 )
 
 // InterfaceLogging represents the interface
@@ -133,9 +136,40 @@ func (l *Logging) SaveError(errorEvent models.Error) {
 		l.Request.SendDiscordAlert(service, updatedErrorEvent)
 	}
 
+	
+    
+   
 	if service.WebhookURL != "" {
-		//l.Request.Post(updatedErrorEvent, service.WebhookURL)
+		//var jsonStr = []byte(`{​​"title":"Buy cheese ", "text":"BLABLALBA"}​​`)
+		//l.Request.Post(jsonStr, service.WebhookURL)
+
+		type ErrorACT struct {
+			Title    string `json:"title"`
+			Text string `json:"text"`
+		}
 		
+		
+		body := &ErrorACT{
+			Title: errorEvent.Message,
+			Text: errorEvent.Stacktrace,
+		}
+		
+		buf := new(bytes.Buffer)
+		json.NewEncoder(buf).Encode(body)
+		req, _ := http.NewRequest("POST", service.WebhookURL, buf)
+		
+		client := &http.Client{}
+		res, e := client.Do(req)
+		if e != nil {
+			return
+		}
+		
+		defer res.Body.Close()
+		
+		fmt.Println("response Status:", res.Status)
+		
+
+		/*
 		// Load Smtp settings
 		smtpServer := keys.GetKeys().SMTP_SERVER
 		smtpPort := keys.GetKeys().SMTP_PORT
@@ -159,6 +193,7 @@ func (l *Logging) SaveError(errorEvent models.Error) {
 		if err := d.DialAndSend(m); err != nil {
 			return
 		}
+		*/
 	}
 }
 
