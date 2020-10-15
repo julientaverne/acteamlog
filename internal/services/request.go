@@ -202,6 +202,7 @@ func (r *Request) SendEmail(recipient, event string, data map[string]interface{}
 
 	// Send the email to Bob, Cora and Dan.
 	if err := d.DialAndSend(m); err != nil {
+		fmt.Println(err)
 		return err
 	}
 	/* END CUSTOM SEND MAIL*/
