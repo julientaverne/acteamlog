@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"bytes"
 	"encoding/json"
+	"sort"
 
 	"github.com/jz222/logowl/internal/models"
 	"github.com/jz222/logowl/internal/store"
@@ -32,6 +33,23 @@ type InterfaceLogging interface {
 type Logging struct {
 	Store   store.InterfaceStore
 	Request InterfaceRequest
+}
+
+func createKeyValuePairs(m map[string]string, line string) string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+    b := new(bytes.Buffer)
+    for _, k := range keys {
+		if k == line {
+			fmt.Fprintf(b, "<b>%s: %s</b> <br>", k, m[k])
+		}else {
+			fmt.Fprintf(b, "<b>%s:</b> %s <br>", k, m[k])
+		}
+    }
+    return b.String()
 }
 
 // SaveError prepares the error data and saves
@@ -140,25 +158,74 @@ func (l *Logging) SaveError(errorEvent models.Error) {
     
    
 	if service.WebhookURL != "" {
-		//var jsonStr = []byte(`{​​"title":"Buy cheese ", "text":"BLABLALBA"}​​`)
 		//l.Request.Post(jsonStr, service.WebhookURL)
-
-		type ErrorACT struct {
-			Title    string `json:"title"`
-			Text string `json:"text"`
-		}
 		
+		type ErrorACT struct {
+			Title    string `json: "title"`
+			Text string `json: "text"`
+		}
+			
 		
 		body := &ErrorACT{
-			Title: errorEvent.Message,
-			Text: errorEvent.Stacktrace,
+			Title: `
+				`,
+			Text: `
+				<table style=" width: 100%;">
+					<tr style="background-color:#000000;">
+						<td>
+							<img src="http://www.acteam-it.com/wp-content/uploads/2017/06/logo_w_75px.png" ></img>
+						</td>
+						<td>
+							<h1><b><font color="#fff">`+organization.Name	+`</font></b></h1>
+						</td>
+						<td>
+							<h1><b><i><font color="#fff">`+service.Name	+`</font></i></b></h1>
+						</td>								
+					</tr>
+				</table>
+				<table>
+					<tr style="background-color:#ffe0b3;">
+						<td> <font color="#000"><b>&nbsp;&nbsp;<u>Category: </u></b></font></td>
+						<td> <font color="#000">`+errorEvent.Adapter.Type+`</font>
+						</td>
+					</tr>
+					<tr style="background-color:#fff5e6;">
+						<td> <font color="#000"><b>&nbsp;&nbsp;<u>Type: </u></b></font></td>
+						<td> <font color="#000">`+errorEvent.Type+`</font>
+						</td>
+					</tr>
+					<tr style="background-color:#ffe0b3;"> 
+						<td> <font color="#000"><b>&nbsp;&nbsp;<u>Message: </u></b></font></td>
+						<td> <font color="#000">`+errorEvent.Message+`</font>
+						</td>
+					</tr>
+					<tr style="background-color:#fff5e6;">
+						<td style="vertical-align: top;"> <font color="#000"><b>&nbsp;&nbsp;<u>Badges: </u></b></font></td>
+						<td> <font color="#000">`+createKeyValuePairs(errorEvent.Badges, errorEvent.Line)+`</font>
+						</td>
+					</tr>
+					<tr style="background-color:#ffe0b3;"> 
+						<td style="vertical-align: top;"> <font color="#000"><b>&nbsp;&nbsp;<u>Stacktrace: </u></b></font></td>
+						<td> <font color="#000">`+errorEvent.Stacktrace+`</font>
+						</td>
+					</tr>
+					<tr style="background-color:#fff5e6;">
+						<td style="vertical-align: top;"> <font color="#000"><b>&nbsp;&nbsp;<u>Snippet: </u></b></font></td>
+						<td> <font color="#000">`+createKeyValuePairs(errorEvent.Snippet, errorEvent.Line)+`</font>
+						</td>
+					</tr>
+				</table>`,
 		}
+		
 		
 		buf := new(bytes.Buffer)
 		json.NewEncoder(buf).Encode(body)
 		req, _ := http.NewRequest("POST", service.WebhookURL, buf)
 		
-		client := &http.Client{}
+		timeout := time.Duration(5 * time.Second)
+		client := http.Client{
+			Timeout: timeout,
+		}
 		res, e := client.Do(req)
 		if e != nil {
 			return
@@ -166,8 +233,9 @@ func (l *Logging) SaveError(errorEvent models.Error) {
 		
 		defer res.Body.Close()
 		
-		fmt.Println("response Status:", res.Status)
+		fmt.Println("response Status 2:", res.Status)
 		
+
 
 		/*
 		// Load Smtp settings
