@@ -1,6 +1,7 @@
 ![log owl hero](./assets/header-logo.png?raw=true)
 
 go get -d -u ./...
+
 go run cmd/logowl/main.go
 
 <div align="center">
